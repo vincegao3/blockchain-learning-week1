@@ -22,7 +22,7 @@ function App() {
         setPrivateKey={setPrivateKey}
         walletAddress={walletAddress}
       />
-      <Transfer setBalance={setBalance} address={address} privateKey={privateKey}/>
+      <Transfer setBalance={setBalance} address={address} privateKey={privateKey} walletAddress={walletAddress}/>
     </div>
   );
 }

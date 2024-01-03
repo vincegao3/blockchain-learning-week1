@@ -1,10 +1,10 @@
 import { keccak256 } from "ethereum-cryptography/keccak";
-import { secp256k1 } from "ethereum-cryptography/secp256k1";
+import * as secp from "ethereum-cryptography/secp256k1";
 import { utf8ToBytes } from "ethereum-cryptography/utils";
 import { useState } from "react";
 import server from "./server";
 
-function Transfer({ address, setBalance, privateKey }) {
+function Transfer({ address, setBalance, privateKey, walletAddress }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
 
@@ -12,25 +12,26 @@ function Transfer({ address, setBalance, privateKey }) {
 
   async function createSignatureMessage(message, privateKey) {
     const hashedMessage = keccak256(utf8ToBytes(message));
-    const signature = await secp256k1.sign(hashedMessage, privateKey);
+    const signature = await secp.secp256k1.sign(hashedMessage, privateKey, { recovery: true });
     return signature;
   }
 
   async function transfer(evt) {
     evt.preventDefault();
     try {
-      const data = await createSignatureMessage("Amount:" + sendAmount, privateKey);
+      const signature = await createSignatureMessage("Amount:" + sendAmount, privateKey);
       const {
         data: { balance },
       } = await server.post(`send`, {
+        sender: walletAddress,
         amount: parseInt(sendAmount),
-        signature: data.signature,
-        recoverBit: data.recovery,
+        signature: signature.toCompactHex(),
+        recoverBit: signature.recovery,
         recipient,
       });
       setBalance(balance);
     } catch (ex) {
-      alert(ex);
+      console.log(ex);
     }
   }
 
